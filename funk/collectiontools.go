@@ -1,4 +1,4 @@
-package gofunk
+package funk
 
 // MapSlice does a map() on a Slice; producing a Slice
 // #(a b c) collect: fn

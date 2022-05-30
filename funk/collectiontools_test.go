@@ -1,4 +1,4 @@
-package gofunk
+package funk
 
 import (
 	"reflect"
