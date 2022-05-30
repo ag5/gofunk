@@ -14,14 +14,14 @@ type Queryable interface {
 	Query(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error)
 }
 
-func QueryIntoStruct[S any](ctx context.Context, conn Queryable, sql string, sample S, args ...interface{}) ([]*S, error) {
+func QueryIntoStruct[S any](ctx context.Context, conn Queryable, sql string, args ...interface{}) ([]*S, error) {
 	var coll []*S
 	rows, err := conn.Query(ctx, sql, args...)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	sampleType := reflect.ValueOf(sample).Type()
+	sampleType := reflect.ValueOf(new(S)).Type().Elem()
 	if sampleType.Kind() != reflect.Struct {
 		return nil, errors.New("sample is not a struct")
 	}
