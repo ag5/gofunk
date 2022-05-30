@@ -12,6 +12,7 @@ import (
 
 type Queryable interface {
 	Query(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error)
+	QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row
 }
 
 func QueryIntoStruct[S any](ctx context.Context, conn Queryable, sql string, args ...interface{}) ([]*S, error) {
@@ -40,4 +41,15 @@ func QueryIntoStruct[S any](ctx context.Context, conn Queryable, sql string, arg
 
 	}
 	return coll, nil
+}
+
+func QueryValue[V any](ctx context.Context, conn Queryable, sql string, args ...interface{}) (V, error) {
+	row := conn.QueryRow(ctx, sql, args...)
+	val := new(V)
+	err := row.Scan(&val)
+	if err != nil {
+		return *val, err
+	}
+	return *val, nil
+
 }
