@@ -15,7 +15,7 @@ func MapSlice[E any, R any](sl []E, fn func(E) R) []R {
 func MapRange[R any](start int, stop int, fn func(int) R) []R {
 	coll := make([]R, stop-start)
 	for i := start; i < stop; i++ {
-		coll[i] = fn(i)
+		coll[i-start] = fn(i)
 	}
 	return coll
 }
