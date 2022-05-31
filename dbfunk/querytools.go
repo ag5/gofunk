@@ -3,10 +3,8 @@ package dbfunk
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/ag5/gofunk/funk"
 	"github.com/jackc/pgx/v4"
-	"os"
 	"reflect"
 )
 
@@ -35,8 +33,7 @@ func QueryIntoStruct[S any](ctx context.Context, conn Queryable, sql string, arg
 		coll = append(coll, obj.Interface().(*S))
 		err = rows.Scan(fields...)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "QueryRow failed: %v\n", err)
-			os.Exit(1)
+			return coll, err
 		}
 
 	}

@@ -31,3 +31,13 @@ func FilterSlice[E any](sl []E, fn func(E) bool) []E {
 	}
 	return coll
 }
+
+func SoleElement[E any](sl []E) E {
+	if len(sl) == 1 {
+		return sl[0]
+	}
+	if len(sl) == 0 {
+		panic("No element found")
+	}
+	panic("Multiple elements found")
+}
