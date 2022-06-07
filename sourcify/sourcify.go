@@ -12,13 +12,6 @@ import (
 	"strings"
 )
 
-func ToSource(obj any) string {
-	w := &strings.Builder{}
-	AnyToExpr(obj)
-
-	return w.String()
-}
-
 func crIndent(w *strings.Builder, ind int) {
 	w.WriteString("\n")
 	for i := 0; i < ind; i++ {
@@ -26,21 +19,31 @@ func crIndent(w *strings.Builder, ind int) {
 	}
 }
 
-func AnyToExpr(obj any) ast.Expr {
-	val := reflect.ValueOf(obj)
-	return ValueToExpr(val)
+func ToSource(obj any) string {
+	return PrintExpr(AnyToExpr(obj))
 }
 
-func ValueToExpr(val reflect.Value) ast.Expr {
-	if !val.IsValid() {
-		return nil
+func AnyToExpr(obj any) ast.Expr {
+	return ValueToExpr(reflect.ValueOf(obj), DefaultConfig())
+}
+func DefaultConfig() ValueToExprConfig {
+	return ValueToExprConfig{
+		SuppressZeroFields: true,
 	}
+}
+
+type ValueToExprConfig struct {
+	SuppressZeroFields bool
+}
+
+func ValueToExpr(val reflect.Value, config ValueToExprConfig) ast.Expr {
+	//if !val.IsValid() {
+	//	return nil
+	//}
 	typ := val.Type()
 	switch typ.Kind() {
 	case reflect.Bool:
-		return &ast.Ident{
-			Name: strconv.FormatBool(val.Bool()),
-		}
+		return &ast.Ident{Name: strconv.FormatBool(val.Bool())}
 	case
 		reflect.Int,
 		reflect.Int8,
@@ -75,7 +78,7 @@ func ValueToExpr(val reflect.Value) ast.Expr {
 		return &ast.CompositeLit{
 			Type: TypeAsExpr(typ),
 			Elts: funk.MapRange(0, val.Len(), func(i int) ast.Expr {
-				return ValueToExpr(val.Index(i))
+				return ValueToExpr(val.Index(i), config)
 			}),
 		}
 
@@ -84,24 +87,31 @@ func ValueToExpr(val reflect.Value) ast.Expr {
 	case reflect.Func:
 		panic("NIY")
 	case reflect.Interface:
-		if !val.Elem().IsNil() {
-			ValueToExpr(val.Elem())
+		if !val.IsZero() && !val.Elem().IsZero() {
+			return ValueToExpr(val.Elem(), config)
 		}
+		if config.SuppressZeroFields {
+			return nil
+		}
+		return &ast.Ident{Name: "nil"}
 	case reflect.Map:
 		panic("NIY")
 	case reflect.Pointer:
 		if !val.IsNil() {
 			return &ast.UnaryExpr{
 				Op: token.AND,
-				X:  ValueToExpr(val.Elem()),
+				X:  ValueToExpr(val.Elem(), config),
 			}
 		}
-		return nil
+		if config.SuppressZeroFields {
+			return nil
+		}
+		return &ast.Ident{Name: "nil"}
 	case reflect.Slice:
 		return &ast.CompositeLit{
 			Type: TypeAsExpr(typ),
 			Elts: funk.MapRange(0, val.Len(), func(i int) ast.Expr {
-				return ValueToExpr(val.Index(i))
+				return ValueToExpr(val.Index(i), config)
 			}),
 		}
 	case reflect.String:
@@ -109,24 +119,41 @@ func ValueToExpr(val reflect.Value) ast.Expr {
 		return &ast.BasicLit{Kind: token.STRING,
 			Value: strconv.Quote(str)}
 	case reflect.Struct:
-		return &ast.CompositeLit{
-			Type: TypeAsExpr(typ),
-
-			Elts: funk.MapRange(0, typ.NumField(), func(i int) ast.Expr {
-				f := typ.Field(i)
-				return &ast.KeyValueExpr{
-					Key:   &ast.Ident{Name: f.Name},
-					Value: ValueToExpr(val.Field(i)),
-				}
-			}),
-		}
+		return structToExpr(val, typ, config)
 
 	case reflect.UnsafePointer:
 		panic("NIY")
 	default:
 		panic("Unknown kind")
 	}
-	return nil
+	panic("Should not occur")
+}
+
+func structToExpr(val reflect.Value, typ reflect.Type, config ValueToExprConfig) ast.Expr {
+	var start = 0
+	var stop = typ.NumField()
+	var elts []ast.Expr
+	for i := start; i < stop; i++ {
+		f := typ.Field(i)
+		fval := val.Field(i)
+		if f.IsExported() {
+			if !config.SuppressZeroFields || !fval.IsZero() {
+
+				fvalExpr := ValueToExpr(fval, config)
+				if fvalExpr != nil {
+					elts = append(elts, &ast.KeyValueExpr{
+						Key:   &ast.Ident{Name: f.Name},
+						Colon: 0,
+						Value: fvalExpr,
+					})
+				}
+			}
+		}
+	}
+	return &ast.CompositeLit{
+		Type: TypeAsExpr(typ),
+		Elts: elts,
+	}
 }
 
 func TypeAsExpr(typ reflect.Type) ast.Expr {
@@ -175,21 +202,19 @@ func TypeAsExpr(typ reflect.Type) ast.Expr {
 	case reflect.Func:
 		panic("niy")
 	case reflect.Interface:
-		panic("niy")
+		return typeAsQualifiedName(typ)
 	case reflect.Map:
 		panic("niy")
 	case reflect.Pointer:
-		panic("niy")
+		return &ast.StarExpr{X: TypeAsExpr(typ.Elem())}
 	case reflect.Slice:
 		return &ast.ArrayType{
 			Elt: TypeAsExpr(typ.Elem()),
 		}
 	case reflect.String:
-		panic("niy")
+		return &ast.Ident{Name: "string"}
 	case reflect.Struct:
-		return &ast.Ident{
-			Name: typ.Name(),
-		}
+		return typeAsQualifiedName(typ)
 	case reflect.UnsafePointer:
 		panic("niy")
 
@@ -197,6 +222,12 @@ func TypeAsExpr(typ reflect.Type) ast.Expr {
 		panic("Unknown kind")
 	}
 	return nil
+}
+
+func typeAsQualifiedName(typ reflect.Type) *ast.SelectorExpr {
+	path := strings.Split(typ.PkgPath(), "/")
+	pkgName := path[len(path)-1]
+	return &ast.SelectorExpr{X: &ast.Ident{Name: pkgName}, Sel: &ast.Ident{Name: typ.Name()}}
 }
 
 func PrintExpr(res ast.Expr) string {

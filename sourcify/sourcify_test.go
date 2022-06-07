@@ -27,4 +27,8 @@ func TestStruct1(t *testing.T) {
 	assertor.AssertEquals(t, "Struct1{Foo: \"Tomaat\", Bar: 7}", PrintExpr(AnyToExpr(str)))
 	strp := &Struct1{Foo: "Tomaat", Bar: 7}
 	assertor.AssertEquals(t, "&Struct1{Foo: \"Tomaat\", Bar: 7}", PrintExpr(AnyToExpr(strp)))
+
+	// Here 'Bar' has a default value; we expect the field to be skipped:
+	str = Struct1{Foo: "Tomaat"}
+	assertor.AssertEquals(t, "Struct1{Foo: \"Tomaat\"}", PrintExpr(AnyToExpr(str)))
 }
