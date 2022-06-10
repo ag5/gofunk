@@ -22,7 +22,7 @@ func ConnectionDo[R any](ctx context.Context, login PostgresLogin, fn func(connP
 	url := login.String()
 	connPool, err := pgxpool.Connect(ctx, url)
 	if err != nil {
-		panic(fmt.Sprintf("Unable to connect to database: %v\n", err))
+		panic(fmt.Sprintf("Unable to connect to database: %v", err))
 	}
 	defer connPool.Close()
 	r := fn(connPool)

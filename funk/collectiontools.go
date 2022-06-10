@@ -41,3 +41,16 @@ func SoleElement[E any](sl []E) E {
 	}
 	panic("Multiple elements found")
 }
+
+func AppendIfAbsent[E any](sl []E, elem E) []E {
+	found := false
+	for _, e := range sl {
+		if interface{}(e) == interface{}(elem) {
+			found = true
+		}
+	}
+	if found {
+		return sl
+	}
+	return append(sl, elem)
+}
