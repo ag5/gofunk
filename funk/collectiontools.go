@@ -10,6 +10,24 @@ func MapSlice[E any, R any](sl []E, fn func(E) R) []R {
 	return coll
 }
 
+// MapKVMap does a map() on a Map; producing a Map
+func MapKVMap[K comparable, E any, R any](mp map[K]E, fn func(K, E) R) map[K]R {
+	coll := make(map[K]R, len(mp))
+	for k, e := range mp {
+		coll[k] = fn(k, e)
+	}
+	return coll
+}
+
+// MapMap does a map() on a Map; producing a Map
+func MapMap[K comparable, E any, R any](mp map[K]E, fn func(E) R) map[K]R {
+	coll := make(map[K]R, len(mp))
+	for k, e := range mp {
+		coll[k] = fn(e)
+	}
+	return coll
+}
+
 // MapRange does a map on all integers between start and stop; producing a Slice
 // (1 to: 100) collect: fn
 func MapRange[R any](start int, stop int, fn func(int) R) []R {
@@ -46,6 +64,19 @@ func AppendIfAbsent[E any](sl []E, elem E) []E {
 	found := false
 	for _, e := range sl {
 		if interface{}(e) == interface{}(elem) {
+			found = true
+		}
+	}
+	if found {
+		return sl
+	}
+	return append(sl, elem)
+}
+
+func AppendIfNotEQ[E any](sl []E, elem E, cmpfn func(a, b E) bool) []E {
+	found := false
+	for _, e := range sl {
+		if cmpfn(e, elem) {
 			found = true
 		}
 	}
