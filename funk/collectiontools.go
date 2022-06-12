@@ -85,3 +85,9 @@ func AppendIfNotEQ[E any](sl []E, elem E, cmpfn func(a, b E) bool) []E {
 	}
 	return append(sl, elem)
 }
+
+func CopySlice[E any](sl []E) []E {
+	var cp []E
+	copy(cp, sl)
+	return cp
+}
