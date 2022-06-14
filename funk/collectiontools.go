@@ -1,5 +1,10 @@
 package funk
 
+import (
+	"golang.org/x/exp/constraints"
+	"sort"
+)
+
 // MapSlice does a map() on a Slice; producing a Slice
 // #(a b c) collect: fn
 func MapSlice[E any, R any](sl []E, fn func(E) R) []R {
@@ -24,6 +29,19 @@ func MapMap[K comparable, E any, R any](mp map[K]E, fn func(E) R) map[K]R {
 	coll := make(map[K]R, len(mp))
 	for k, e := range mp {
 		coll[k] = fn(e)
+	}
+	return coll
+}
+
+func MapToSlice[K constraints.Ordered, E any, R any](mp map[K]E, fn func(E) R) []R {
+	keys := make([]K, 0)
+	for k, _ := range mp {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
+	coll := make([]R, 0, len(keys))
+	for _, k := range keys {
+		coll = append(coll, fn(mp[k]))
 	}
 	return coll
 }
