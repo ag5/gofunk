@@ -92,6 +92,14 @@ func CopySlice[E any](sl []E) []E {
 	return cp
 }
 
+func ConcatSlices[E any](slices ...[]E) []E {
+	var cp []E
+	for _, slice := range slices {
+		cp = append(cp, slice...)
+	}
+	return cp
+}
+
 func EqualsMap[K comparable, V any](mapA map[K]V, mapB map[K]V, cmp func(a, b V) bool) bool {
 
 	if len(mapA) != len(mapB) {
@@ -150,4 +158,22 @@ func MapAnySatisfy[K comparable, V any](mp map[K]V, test func(e V) bool) bool {
 		}
 	}
 	return false
+}
+
+func FoldSlice[V any](sl []V, fold func(a, b V) V) V {
+	if len(sl) == 0 {
+		var noop V
+		return noop
+	}
+	firstFold := true
+	var val V
+	for _, v := range sl {
+		if firstFold {
+			val = v
+			firstFold = false
+		} else {
+			val = fold(val, v)
+		}
+	}
+	return val
 }
