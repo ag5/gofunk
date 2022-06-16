@@ -46,6 +46,19 @@ func MapToSlice[K constraints.Ordered, E any, R any](mp map[K]E, fn func(E) R) [
 	return coll
 }
 
+func MapKVToSlice[K constraints.Ordered, E any, R any](mp map[K]E, fn func(K, E) R) []R {
+	keys := make([]K, 0)
+	for k, _ := range mp {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
+	coll := make([]R, 0, len(keys))
+	for _, k := range keys {
+		coll = append(coll, fn(k, mp[k]))
+	}
+	return coll
+}
+
 // MapRange does a map on all integers between start and stop; producing a Slice
 // (1 to: 100) collect: fn
 func MapRange[R any](start int, stop int, fn func(int) R) []R {
