@@ -117,9 +117,12 @@ func AppendIfNotEQ[E any](sl []E, elem E, cmp func(a, b E) bool) []E {
 	return append(sl, elem)
 }
 
-func CopySlice[E any](sl []E) []E {
-	var cp []E
+func CopySlice[E any](sl []E, extraElements ...E) []E {
+	cp := make([]E, len(sl), len(sl)+len(extraElements))
 	copy(cp, sl)
+	for _, elem := range extraElements {
+		cp = append(cp, elem)
+	}
 	return cp
 }
 
