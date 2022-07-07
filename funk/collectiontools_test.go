@@ -1,7 +1,7 @@
 package funk
 
 import (
-	"github.com/ag5/gofunk/assertor"
+	"github.com/stretchr/testify/require"
 	"reflect"
 	"strconv"
 	"testing"
@@ -63,11 +63,15 @@ func TestAppendIfAbsent(t *testing.T) {
 	src := []string{"foo", "bar", "zonk"}
 	src = AppendIfAbsent(src, "foo")
 
-	assertor.AssertDeepEquals(t, []string{"foo", "bar", "zonk"}, src)
+	var expected any = []string{"foo", "bar", "zonk"}
+	var got any = src
+	require.Equal(t, expected, got)
 
 	src = AppendIfAbsent(src, "boo")
 
-	assertor.AssertDeepEquals(t, []string{"foo", "bar", "zonk", "boo"}, src)
+	var expected2 any = []string{"foo", "bar", "zonk", "boo"}
+	var got2 any = src
+	require.Equal(t, expected2, got2)
 
 }
 
@@ -75,9 +79,13 @@ func TestAppendIfNotEQ(t *testing.T) {
 	src := []string{"foo", "zonk"}
 	src = AppendIfNotEQ(src, "bar", func(a, b string) bool { return len(a) == len(b) })
 
-	assertor.AssertDeepEquals(t, []string{"foo", "zonk"}, src)
+	var expected any = []string{"foo", "zonk"}
+	var got any = src
+	require.Equal(t, expected, got)
 
 	src = AppendIfNotEQ(src, "frobnicate", func(a, b string) bool { return len(a) == len(b) })
 
-	assertor.AssertDeepEquals(t, []string{"foo", "zonk", "frobnicate"}, src)
+	var expected2 any = []string{"foo", "zonk", "frobnicate"}
+	var got2 any = src
+	require.Equal(t, expected2, got2)
 }
