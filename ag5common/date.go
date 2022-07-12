@@ -24,6 +24,10 @@ func NewDate(y int32, m int32, d int32) Date {
 	return Date(dateInt)
 }
 
+func NewDateFromTime(lTime time.Time) Date {
+	return NewDate(int32(lTime.Year()), int32(lTime.Month()), int32(lTime.Day()))
+}
+
 func (date Date) AsYMD() (y int32, m int32, d int32) {
 	jd := int32(date)
 	l := jd + 68569

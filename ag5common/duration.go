@@ -56,3 +56,63 @@ func Days(days int) Duration {
 		Days: int32(days),
 	}
 }
+
+//
+//func (dst *Duration) Scan(src any) error {
+//	if src == nil {
+//		return nil
+//	}
+//
+//	var pgval pgtype.Interval
+//	err := pgval.Scan(src)
+//	if err != nil {
+//		return err
+//	}
+//	years := pgval.Months / 12
+//	months := pgval.Months % 12
+//	days := pgval.Days
+//	seconds := pgval.Microseconds / 1_000_000
+//	_ = pgval.Microseconds % 1_000_000 // micros
+//	minutes := seconds / 60
+//	seconds = seconds % 60
+//	hours := minutes / 60
+//	minutes = minutes / 60
+//	var dr = Duration{
+//		Years:   years,
+//		Months:  months,
+//		Days:    days,
+//		Hours:   int32(hours),
+//		Minutes: int32(minutes),
+//		Seconds: int32(seconds),
+//	}
+//	dst = &dr
+//	return nil
+//}
+//
+//func (dst *Duration) DecodeBinary(ci *pgtype.ConnInfo, src []byte) error {
+//
+//	var pgval pgtype.Interval
+//	err := pgval.DecodeBinary(ci, src)
+//	if err != nil {
+//		return err
+//	}
+//	years := pgval.Months / 12
+//	months := pgval.Months % 12
+//	days := pgval.Days
+//	seconds := pgval.Microseconds / 1_000_000
+//	_ = pgval.Microseconds % 1_000_000 // micros
+//	minutes := seconds / 60
+//	seconds = seconds % 60
+//	hours := minutes / 60
+//	minutes = minutes / 60
+//	var dr = Duration{
+//		Years:   years,
+//		Months:  months,
+//		Days:    days,
+//		Hours:   int32(hours),
+//		Minutes: int32(minutes),
+//		Seconds: int32(seconds),
+//	}
+//	dst = &dr
+//	return nil
+//}
